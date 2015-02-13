@@ -10,12 +10,21 @@ class Line
   def rolls_to_count
     if @rolls[-3].strike?
       @rolls[0..-3]
+    elsif @rolls[-2].spare?
+      @rolls[0..-2]
+    else
+      @rolls
     end
   end
 
   def next_to(roll)
     index = @rolls.index(roll)
     @rolls[index + 1]
+  end
+
+  def prev_to(roll)
+    index = @rolls.index(roll)
+    @rolls[index - 1] if index > 0
   end
 end
 
@@ -28,6 +37,10 @@ class Roll
   def score
     if strike?
       value + next_value(count: 2)
+    elsif spare?
+      value + next_value(count: 1)
+    else
+      value
     end
   end
 
@@ -35,9 +48,17 @@ class Roll
     @str == 'X'
   end
 
+  def spare?
+    @str == '/'
+  end
+
   def value
     if strike?
       10
+    elsif spare?
+      10 - prev_value
+    else
+      @str.to_i
     end
   end
 
@@ -46,7 +67,15 @@ class Roll
     next_roll.value + next_roll.next_value(count: count - 1)
   end
 
+  def prev_value
+    prev_roll.nil? ? 0 : prev_roll.value
+  end
+
   def next_roll
     @next_roll ||= @line.next_to(self)
+  end
+
+  def prev_roll
+    @prev_roll ||= @line.prev_to(self)
   end
 end
